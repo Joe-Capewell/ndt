@@ -1,17 +1,20 @@
 <h1>NDT</h1>
-<div style="display:table;width:100%">
-  <div style="display:table-row">
-    <div style="display:table-cell;width:50%;height:100%;border:solid;">
-      <b>Console</b>
-      <input style="border:dashed;background-color:white" id='console'><br>
-      <button onclick='execCons()'>EXECUTE</button>
+<div style="display:table;height:50%;width:100%">
+    <div style="display:table-row">
+        <div style="width:100%;height:100%;border:solid;">
+            <button onclick="window[NDT.currentInstance].showTab('console')">Console</button><button onclick="window[NDT.currentInstance].showTab('network')">Network</button><br>
+            <div class="console">
+                <b>Console</b>
+                <div id="Hconsole" style="background-color:white;height:90%;width:100%;">
+                </div>
+                <input style="width:100%;background-color:white" id='console'><br>
+                <button onclick='window[NDT.currentInstance].execCons()'>EXECUTE</button>
+            </div>
+            <div class="network">
+                <b>Network</b>
+                <div id="network" style="background-color:white;height:90%;width:100%;">
+                </div>
+            </div>
+        </div>
     </div>
-    <div style="display:table-cell;border:solid;height:100%;">
-      <b>Errors</b>
-      <div style="background-color:red;overflow:scroll;" id="errList">
-        <b>hmm</b>
-        <li>test</li>
-      </div>
-    </div>
-  </div>
 </div>
