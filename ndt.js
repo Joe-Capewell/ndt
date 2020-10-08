@@ -1,32 +1,36 @@
-document.addEventListener("keydown", function(e) {
+var url="http://127.0.0.1:8887/ndt.html";
+
+class NDT{
+  
+constructor(name){
+  if(NDT.currentInstance!==undefined){
+    alert("more than one instance of NDT will break things!");
+  }else{
+  
+  alert(this.constructor.name);
+  
+  this.startTime=new Date();
+  
+  fetch(url, {
+    cache: "no-cache"
+  }).then(response=>response.text())
+  .then(response=>this.createDT(response));
+  
+  NDT.currentInstance=name;
+  
+  document.addEventListener("keydown", function(e) {
     if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-        showDT();
+        window[NDT.currentInstance].showDT();
         e.preventDefault();
     }
-});
-
-var isShown = false;
-var isRun = false;
-
-var current = "network";
-
-var netReqs = [];
-
-startTime = new Date();
-
-fetch('https://ezy.warum-llamas.tk/temp/ndt.html', {
-    cache: "no-cache"
-}).then(response=>response.text()).then(response=>createDT(response));
-
-function getTS() {
-    endTime = new Date();
-    var timeDiff = (endTime - startTime) / 1000;
-    //in s
-    return timeDiff;
-}
-
-function logE(a, b, c, d, e) {
-    var msg = a + " at:" + b + " Line:" + c + " Col:" + d + " Time:" + getTS();
+  });
+  
+  this.isShown=false;
+  this.isRun=false;
+  this.current="console";
+  
+  window.onerror=function(a, b, c, d, e) {
+    var msg = a + " At:" + b + " Line:" + c + " Col:" + d + " Time:" + window[NDT.currentInstance].getTS();
     var errmsg = document.createElement("DIV");
     errmsg.innerHTML = msg;
     var carrier = document.createElement("DIV");
@@ -35,14 +39,22 @@ function logE(a, b, c, d, e) {
     carrier.appendChild(errmsg);
     document.getElementById("Hconsole").appendChild(carrier);
 }
-
-function showTab(tab) {
-    document.querySelector("." + current).style.display = "none";
-    document.querySelector("." + tab).style.display = "initial";
-    current = tab;
+  }
+}
+  
+getTS() {
+    var endTime = new Date();
+    var timeDiff = (endTime - this.startTime) / 1000;
+    return timeDiff;
 }
 
-function createDT(dt) {
+showTab(tab) {
+    document.querySelector("." + this.current).style.display = "none";
+    document.querySelector("." + tab).style.display = "initial";
+    this.current = tab;
+}
+
+createDT(dt) {
     var br = document.createElement("BR");
     document.body.appendChild(br);
     var ndt = document.createElement("DIV");
@@ -64,63 +76,35 @@ function createDT(dt) {
     window.onerror = logE;
 }
 
-function showDT() {
-    if (!isShown) {
-        if (!isRun) {
-            showTab("console");
+showDT() {
+    if (!this.isShown) {
+        if (!this.isRun) {
+            this.showTab("network");
+            this.showTab("console");
         }
         document.getElementById("ndt").style.display = "initial";
-        isShown = true;
+        this.isShown = true;
     } else {
         document.getElementById("ndt").style.display = "none";
-        isShown = false;
+        this.isShown = false;
     }
 }
 
-var xhrProxy0 = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function() {
-    xhrProxy0.apply(this, arguments);
-    this.args = arguments;
-}
-;
-
-var xhrProxy1 = XMLHttpRequest.prototype.send;
-XMLHttpRequest.prototype.send = function() {
-    if (this.onload !== null)
-        this.ndtOnload = this.onload;
-    this.startTS = getTS();
-    this.onload = function() {
-        var req = document.createElement("DIV");
-        req.innerHTML = this.args[0] + "-" + this.args[1] + "-" + this.startTS + "-" + getTS();
-        if (document.getElementById("network") == null) {
-            netReqs.push(req);
-        } else {
-            document.getElementById("network").appendChild(req);
-        }
-        if (this.ndtOnload !== undefined)
-            this.ndtOnload();
-    }
-    ;
-    xhrProxy1.apply(this, arguments);
-}
-;
-
-function execCons() {
+execCons() {
     var code = document.createElement("DIV");
-    code.innerHTML = document.getElementById("console").value + " Time:" + getTS();
+    code.innerHTML = document.getElementById("console").value + " Time:" + this.getTS();
     document.getElementById("Hconsole").appendChild(code);
     var str = document.getElementById("console").value;
     if(!str.includes("=")){
-        evalScript("function ndtAnon(){" + str + "}");
-        evalScript("responseFunc(ndtAnon())");
+        this.evalScript("function ndtAnon(){" + str + "}");
+        this.evalScript("window[NDT.currentInstance].responseFunc(ndtAnon())");
     }else{
-        evalScript(str);
-        evalScript("responseFunc(undefined)");
+        this.evalScript(str);
+        this.evalScript("window[NDT.currentInstance].responseFunc(undefined)");
     }
 }
 
-function evalScript(script) {
-    //alternative to eval because of xss guards
+evalScript(script) {
     var blobText = script;
 
     var abc = new Blob([blobText],{
@@ -139,10 +123,14 @@ function evalScript(script) {
     def.readAsText(abc);
 }
 
-function responseFunc(data) {
+responseFunc(data) {
     var code = document.createElement("DIV");
     if (typeof (data) == "object")
         data = JSON.stringify(data);
     code.innerHTML = "Result:" + data;
     document.getElementById("Hconsole").appendChild(code);
 }
+
+}
+
+var ndt=new NDT("ndt");
