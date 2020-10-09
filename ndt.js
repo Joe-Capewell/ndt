@@ -1,4 +1,15 @@
-var url = "https://raw.githubusercontent.com/Joe-Capewell/ndt/main/ndt.html";
+var url = "http://127.0.0.1:8887/ndt.html";
+
+var console = {};
+
+console.log = function (txt) {
+	var code = document.createElement("DIV");
+	code.innerHTML =
+		window[NDT.currentInstance].escapeHTML(txt) +
+		" Time:" +
+		window[NDT.currentInstance].getTS();
+	document.getElementById("Hconsole").appendChild(code);
+};
 
 class NDT {
 	constructor(name) {
@@ -59,6 +70,7 @@ class NDT {
 		ndt.style.width = window.innerWidth;
 		ndt.style.height = "50%";
 		ndt.style.display = "none";
+		ndt.style.zIndex=9999;
 		document.body.appendChild(ndt);
 		var i = 0;
 		while (i < this.netReqs.length) {
@@ -133,10 +145,39 @@ class NDT {
 		return txt;
 	}
 	updateDom(){
+	  var elems=document.querySelectorAll("*");
+	  var i=0;
+	  while(i<elems.length){
+	    elems[i].setAttribute("data-ndt-id", i);
+	    i++;
+	  }
 	  document.getElementById("dom").value=document.documentElement.innerHTML;
 	}
 	saveDom(){
-	  document.documentElement.innerHTML=document.getElementById("dom").value;
+	  var oldDom=document.createElement("HTML");
+	  oldDom.innerHTML=document.documentElement.innerHTML;
+	  var oldElems=oldDom.querySelectorAll("*");
+	  
+	  var newDom=document.createElement("HTML");
+	  newDom.innerHTML=document.getElementById("dom").value;
+	  var newElems=newDom.querySelectorAll("*");
+	  
+	  var i=0;
+	  var diffs=[];
+	  
+	  while(i<oldElems.length){
+	    if(newElems[i].innerHTML!==oldElems[i].innerHTML){
+	      diffs.push(newElems[i]);
+	    }
+	    i++;
+	  }
+	  
+	  var t=0;
+	  while(t<diffs.length){
+	    console.log(JSON.stringify(document.querySelectorAll('[data-ndt-id="'+diffs[t].getAttribute("data-ndt-id")+'"]')));
+	    document.querySelectorAll('[data-ndt-id="'+diffs[t].getAttribute("data-ndt-id")+'"]')[0].innerHTML=diffs[t].innerHTML;
+	    t++;
+	  }
 	}
 }
 
@@ -197,15 +238,4 @@ XMLHttpRequest.prototype.send = function () {
 		if (this.ndtOnload !== undefined) this.ndtOnload();
 	};
 	NDT.XMLHttpRequest.send.apply(this, arguments);
-};
-
-var console = {};
-
-console.log = function (txt) {
-	var code = document.createElement("DIV");
-	code.innerHTML =
-		window[NDT.currentInstance].escapeHTML(txt) +
-		" Time:" +
-		window[NDT.currentInstance].getTS();
-	document.getElementById("Hconsole").appendChild(code);
 };
