@@ -3,9 +3,9 @@
     <div style="display:table-row">
         <div style="width:100%;height:100%;border:solid;">
             <button onclick="window[NDT.currentInstance].showTab('console')">Console</button><button onclick="window[NDT.currentInstance].showTab('network')">Network</button><button onclick="window[NDT.currentInstance].showTab('dom')">DOM</button><br>
-            <div class="console">
+            <div id="consoleParent" class="console">
                 <b>Console</b>
-                <div id="Hconsole" style="background-color:white;height:90%;width:100%;">
+                <div id="Hconsole" style="overflow:scroll;background-color:white;height:90%;width:100%;">
                 </div>
                 <input style="width:100%;background-color:white" id='console'><br>
                 <button onclick='window[NDT.currentInstance].execCons()'>EXECUTE</button>
