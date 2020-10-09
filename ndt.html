@@ -2,7 +2,7 @@
 <div style="display:table;height:50%;width:100%">
     <div style="display:table-row">
         <div style="width:100%;height:100%;border:solid;">
-            <button onclick="window[NDT.currentInstance].showTab('console')">Console</button><button onclick="window[NDT.currentInstance].showTab('network')">Network</button><br>
+            <button onclick="window[NDT.currentInstance].showTab('console')">Console</button><button onclick="window[NDT.currentInstance].showTab('network')">Network</button><button onclick="window[NDT.currentInstance].showTab('dom')">DOM</button><br>
             <div class="console">
                 <b>Console</b>
                 <div id="Hconsole" style="background-color:white;height:90%;width:100%;">
@@ -14,6 +14,13 @@
                 <b>Network</b>
                 <div id="network" style="background-color:white;height:90%;width:100%;">
                 </div>
+            </div>
+            <div class="dom">
+                <b>DOM</b>
+                <textarea id="dom" style="background-color:white;height:90%;width:100%;">
+                </textarea>
+                <button onclick="window[NDT.currentInstance].updateDom()">Update DOM</button>
+                <button onclick="window[NDT.currentInstance].saveDom()">Save DOM</button>
             </div>
         </div>
     </div>
