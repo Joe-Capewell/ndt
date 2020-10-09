@@ -1,4 +1,4 @@
-var url = "https://ezy.warum-llamas.tk/temp/ndt.html";
+var url = "http://127.0.0.1:8887/ndt.html";
 
 class NDT {
 	constructor(name) {
@@ -117,25 +117,26 @@ class NDT {
 	}
 
 	responseFunc(data) {
-		var code = document.createElement("DIV");
 		if (typeof data == "object") data = JSON.stringify(data);
-		code.innerHTML = "Result:" + data;
-		document.getElementById("Hconsole").appendChild(code);
+		var text = "Result:" + data;
+		console.log(text);
 	}
 
-	escapeHTML(html_str) {
-		"use strict";
-
-		return html_str.replace(/[&<>"]/g, function (tag) {
-			var chars_to_replace = {
-				"&": "&",
-				"<": "<",
-				">": ">",
-				'"': '"',
-			};
-
-			return chars_to_replace[tag] || tag;
-		});
+	escapeHTML(txt) {
+	  var count = ((txt.match(/</g)||[]).length)+((txt.match(/>/g)||[]).length);
+	  var i=0;
+		while(i<count){
+		  txt=txt.replace("<","&lt;");
+		  txt=txt.replace(">","&gt;");
+		  i++;
+		}
+		return txt;
+	}
+	updateDom(){
+	  document.getElementById("dom").value=document.documentElement.innerHTML;
+	}
+	saveDom(){
+	  document.documentElement.innerHTML=document.getElementById("dom").value;
 	}
 }
 
@@ -185,7 +186,7 @@ XMLHttpRequest.prototype.send = function () {
 			window[NDT.currentInstance].getTS() +
 			"---" +
 			"<a onclick=" +
-			"console.log(this.parentElement.getAttribute('data-ndt-netreq'))" +
+			"console.log(this.parentElement.getAttribute('data-ndt-netreq'));window[NDT.currentInstance].showTab('console')" +
 			">SHOWOPTIONS</a>";
 		this.NDTinfo = {};
 		this.NDTinfo.responseText = this.responseText;
