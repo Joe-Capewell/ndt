@@ -1,4 +1,4 @@
-var url = "http://127.0.0.1:8887/ndt.html";
+var url = "https://raw.githubusercontent.com/Joe-Capewell/ndt/main/ndt.html";
 
 class NDT {
 	constructor(name) {
