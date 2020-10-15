@@ -1,4 +1,6 @@
-var url = "http://127.0.0.1:8887/ndt.html";
+var url = "https://ezy.warum-llamas.tk/temp/ndt.html";
+
+var oldlog = console.log;
 
 var console = {};
 
@@ -42,6 +44,7 @@ class NDT {
 			this.isShown = false;
 			this.isRun = false;
 			this.current = "console";
+			this.select = true;
 		}
 	}
 
@@ -70,7 +73,7 @@ class NDT {
 		ndt.style.width = window.innerWidth;
 		ndt.style.height = "50%";
 		ndt.style.display = "none";
-		ndt.style.zIndex=9999;
+		ndt.style.zIndex = 9999;
 		document.body.appendChild(ndt);
 		var i = 0;
 		while (i < this.netReqs.length) {
@@ -84,6 +87,7 @@ class NDT {
 		if (!this.isShown) {
 			if (!this.isRun) {
 				this.showTab("network");
+				this.showTab("dom");
 				this.showTab("console");
 			}
 			document.getElementById("ndt").style.display = "initial";
@@ -98,14 +102,18 @@ class NDT {
 		var str = document.getElementById("console").value;
 		console.log(document.getElementById("console").value);
 		if (!str.includes("=")) {
-			this.evalScript("function ndtAnon(){" + str + "}");
 			this.evalScript(
-				"window[NDT.currentInstance].responseFunc(ndtAnon())"
+				"function ndtAnon(){" +
+					str +
+					"}" +
+					"\n" +
+					"window[NDT.currentInstance].responseFunc(ndtAnon());"
 			);
 		} else {
-			this.evalScript(str);
 			this.evalScript(
-				"window[NDT.currentInstance].responseFunc(undefined)"
+				str +
+					"\n" +
+					"window[NDT.currentInstance].responseFunc(undefined)"
 			);
 		}
 	}
@@ -135,63 +143,118 @@ class NDT {
 	}
 
 	escapeHTML(txt) {
-	  var count = ((txt.match(/</g)||[]).length)+((txt.match(/>/g)||[]).length);
-	  var i=0;
-		while(i<count){
-		  txt=txt.replace("<","&lt;");
-		  txt=txt.replace(">","&gt;");
-		  i++;
+		var count =
+			(txt.match(/</g) || []).length +
+			(txt.match(/>/g) || []).length +
+			(txt.match(/\n/g) || []).length;
+		var i = 0;
+		while (i < count) {
+			txt = txt.replace("<", "&lt;");
+			txt = txt.replace(">", "&gt;");
+			i++;
+		}
+		var t = 0;
+		while (t < count) {
+			txt = txt.replace("\n", "<br data-ndt-nl>");
+			t++;
 		}
 		return txt;
 	}
-	updateDom(){
-	  var elems=document.querySelectorAll("*");
-	  var i=0;
-	  while(i<elems.length){
-	    elems[i].setAttribute("data-ndt-id", i);
-	    i++;
-	  }
-	  document.getElementById("dom").value=document.documentElement.innerHTML;
+
+	unescapeHTML(txt) {
+		var count =
+			(txt.match(/&lt;/g) || []).length +
+			(txt.match(/&gt;/g) || []).length +
+			(txt.match(/<br data-ndt-nl>/g) || []).length;
+		var i = 0;
+		while (i < count) {
+			txt = txt.replace("&lt;", "<");
+			txt = txt.replace("&gt;", ">");
+			i++;
+		}
+		var t = 0;
+		while (t < count) {
+			txt = txt.replace("<br data-ndt-nl>", "\n");
+			t++;
+		}
+		return txt;
 	}
-	saveDom(){
-	  var oldDom=document.createElement("HTML");
-	  oldDom.innerHTML=document.documentElement.innerHTML;
-	  var oldElems=oldDom.querySelectorAll("*");
-	  
-	  var newDom=document.createElement("HTML");
-	  newDom.innerHTML=document.getElementById("dom").value;
-	  var newElems=newDom.querySelectorAll("*");
-	  
-	  var i=0;
-	  var diffs=[];
-	  
-	  while(i<oldElems.length){
-	    if(newElems[i].innerHTML!==oldElems[i].innerHTML){
-	      diffs.push(newElems[i]);
-	    }
-	    i++;
-	  }
-	  
-	  var t=0;
-	  while(t<diffs.length){
-	    console.log(JSON.stringify(document.querySelectorAll('[data-ndt-id="'+diffs[t].getAttribute("data-ndt-id")+'"]')));
-	    document.querySelectorAll('[data-ndt-id="'+diffs[t].getAttribute("data-ndt-id")+'"]')[0].innerHTML=diffs[t].innerHTML;
-	    t++;
-	  }
+
+	updateDom() {
+		var elems = document.querySelectorAll(
+			"*:not(html):not(body):not(head)"
+		);
+		var i = 0;
+		while (i < elems.length) {
+			elems[i].setAttribute("data-ndt-id", i);
+			i++;
+		}
+		var htmlDoc = new DocumentFragment();
+		var html = document.createElement("HTML");
+		html.id = "ndtDoc";
+		html.innerHTML = document.documentElement.innerHTML;
+		htmlDoc.appendChild(html);
+		var ndtElem = htmlDoc.getElementById("ndt");
+		ndtElem.parentNode.removeChild(ndtElem);
+		document.getElementById("dom").innerHTML = this.escapeHTML(
+			htmlDoc.getElementById("ndtDoc").innerHTML
+		);
+	}
+
+	saveDom() {
+		var oldDomDoc = new DocumentFragment();
+		var oldDom = document.createElement("HTML");
+		oldDom.innerHTML = document.documentElement.innerHTML;
+		oldDomDoc.appendChild(oldDom);
+		var ndtElem = oldDomDoc.getElementById("ndt");
+		ndtElem.parentNode.removeChild(ndtElem);
+		var oldElems = oldDomDoc.querySelectorAll("[data-ndt-id]");
+
+		var newDom = document.createElement("HTML");
+		var userHTML = document.getElementById("dom").innerHTML;
+		newDom.innerHTML = this.unescapeHTML(userHTML);
+		var newElems = newDom.querySelectorAll(
+			"*:not(html):not(body):not(head):not([data-ndt-nl])"
+		);
+
+		var i = 0;
+		var diffs = [];
+
+		while (i < oldElems.length) {
+			if (newElems[i].innerHTML !== oldElems[i].innerHTML) {
+				diffs.push(newElems[i]);
+			}
+			i++;
+		}
+
+		var t = 0;
+		while (t < diffs.length) {
+			var currentElem = document.querySelectorAll(
+				'[data-ndt-id="' + diffs[t].getAttribute("data-ndt-id") + '"]'
+			)[0];
+			currentElem.innerHTML = diffs[t].innerHTML;
+			t++;
+		}
+	}
+
+	toggleSelect() {
+		alert(this.select);
+		if (this.select) {
+			document.addEventListener("click", (e) => {
+				alert(
+					document.elementFromPoint(e.clientX, e.clientY).outerHTML
+				);
+				e.preventDefault();
+				this.select = false;
+			});
+		} else {
+			this.select = true;
+		}
 	}
 }
 
 NDT.logE = function (a, b, c, d, e) {
-	var msg =
-		a +
-		" At:" +
-		b +
-		" Line:" +
-		c +
-		" Col:" +
-		d +
-		" Time:" +
-		window[NDT.currentInstance].getTS();
+	var msg = e.stack;
 	var errmsg = document.createElement("DIV");
 	errmsg.innerHTML = msg;
 	var carrier = document.createElement("DIV");
